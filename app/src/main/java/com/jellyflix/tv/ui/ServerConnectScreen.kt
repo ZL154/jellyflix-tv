@@ -34,7 +34,7 @@ import androidx.tv.material3.Text
 fun ServerConnectScreen(onConnected: (String) -> Unit) {
     var url by remember { mutableStateOf(TextFieldValue("")) }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Surface(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.fillMaxSize().padding(horizontal = 96.dp, vertical = 64.dp),
             verticalArrangement = Arrangement.Center,

@@ -16,7 +16,7 @@ import timber.log.Timber
 
 /**
  * Centralizes the knobs that make playback *feel* native on a TV:
- *  - tunneled MediaCodec decoding (lower latency, lower CPU)
+ *  - tunneled MediaCodec decoding (lower latency, lower CPU) via TrackSelectionParameters
  *  - display refresh rate matching for judder-free 24 / 25 / 50 / 60 fps video
  *  - Atmos / DTS / TrueHD passthrough when the TV or receiver supports it
  *  - preferred codec / HDR / audio channel counts for the selected device
@@ -29,27 +29,14 @@ object PlaybackOptimizer {
         DefaultRenderersFactory(context)
             .setEnableDecoderFallback(true)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
-            .experimentalSetMediaCodecAsyncCryptoEnabled(true)
-            .setEnableAudioTrackPlaybackParams(true)
             .setEnableAudioFloatOutput(true)
-            .setEnableAudioOffload(true)
-            .apply {
-                // Tunneled playback is safe on AndroidTV / GoogleTV and cuts end-to-end latency.
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    setTunnelingEnabled(true)
-                }
-            }
 
-    /** Base track-selection parameters: prefer HDR if TV reports it, max quality by default. */
+    /** Base track-selection parameters: tunnel mode + max audio channels the system reports. */
     fun trackParameters(context: Context): TrackSelectionParameters {
         val caps = AudioCapabilities.getCapabilities(context)
         return TrackSelectionParameters.Builder(context)
-            .setPreferredAudioLanguage(null)
-            .setPreferredTextLanguage(null)
             .setTunnelingEnabled(true)
             .setMaxAudioChannelCount(if (caps.maxChannelCount > 0) caps.maxChannelCount else 8)
-            .setAllowAudioNonSeamlessAdaptiveness(false)
-            .setAllowVideoMixedMimeTypeAdaptiveness(false)
             .build()
     }
 
@@ -70,9 +57,7 @@ object PlaybackOptimizer {
         } ?: return
 
         val params: WindowManager.LayoutParams = window.attributes
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            params.preferredDisplayModeId = best.modeId
-        }
+        params.preferredDisplayModeId = best.modeId
         params.preferredRefreshRate = best.refreshRate
         window.attributes = params
         Timber.d("Matched refresh: src=%.2f → display=%.2fHz (modeId=%d)", fps, best.refreshRate, best.modeId)

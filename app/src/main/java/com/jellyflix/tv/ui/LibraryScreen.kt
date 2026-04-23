@@ -26,7 +26,7 @@ fun LibraryScreen(
 
     androidx.compose.runtime.LaunchedEffect(libraryId) { vm.load(libraryId) }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Surface(modifier = Modifier.fillMaxSize()) {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 200.dp),
             contentPadding = PaddingValues(48.dp),

@@ -100,7 +100,6 @@ class StreamUrlResolver @Inject constructor(
             transcodingProfiles = emptyList(),
             containerProfiles = emptyList(),
             codecProfiles = emptyList(),
-            responseProfiles = emptyList(),
             subtitleProfiles = emptyList(),
         )
     }

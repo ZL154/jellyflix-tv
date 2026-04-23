@@ -29,7 +29,7 @@ fun HomeScreen(
 ) {
     val state by vm.state.collectAsState()
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Surface(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 48.dp, vertical = 32.dp),

@@ -36,7 +36,7 @@ fun LoginScreen(
 
     if (state is LoginViewModel.State.Success) onAuthenticated()
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Surface(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.fillMaxSize().padding(horizontal = 96.dp, vertical = 64.dp),
             verticalArrangement = Arrangement.Center,
