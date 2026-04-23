@@ -31,11 +31,17 @@ object PlaybackOptimizer {
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             .setEnableAudioFloatOutput(true)
 
-    /** Base track-selection parameters: tunnel mode + max audio channels the system reports. */
+    /**
+     * Base track-selection parameters. Max audio channels comes from what the
+     * system reports so Atmos / DTS:X are offered when the path supports them.
+     *
+     * Tunneled playback is configured via DefaultTrackSelector.Parameters (not
+     * the base TrackSelectionParameters); enable it there when the player is
+     * wired with a DefaultTrackSelector.
+     */
     fun trackParameters(context: Context): TrackSelectionParameters {
         val caps = AudioCapabilities.getCapabilities(context)
         return TrackSelectionParameters.Builder(context)
-            .setTunnelingEnabled(true)
             .setMaxAudioChannelCount(if (caps.maxChannelCount > 0) caps.maxChannelCount else 8)
             .build()
     }
