@@ -56,8 +56,8 @@ and every tagged `v*` release publishes APKs to **[Releases](https://github.com/
 
 ### Option B — build from source
 
-Open the repo in **Android Studio Panda 4 (2025.3.4)** or newer. When prompted,
-install the Android TV 14 (API 34) system image if you want the emulator.
+For iterating on code, install **Android Studio Panda 4 (2025.3.4)** or
+newer — full setup in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ```bash
 # One-off: generate the Gradle wrapper jar (not committed).
