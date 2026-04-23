@@ -42,7 +42,7 @@ gradle wrapper --gradle-version 8.9
 ./gradlew :sample-plugin:assembleDebug
 ```
 
-Open the repo in **Android Studio Koala (2024.1.1)** or newer. When prompted,
+Open the repo in **Android Studio Panda 4 (2025.3.4)** or newer. When prompted,
 install the Android TV 14 (API 34) system image if you want to run the emulator.
 
 ## Install on a TV
