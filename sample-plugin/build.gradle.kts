@@ -7,12 +7,12 @@ base { archivesName = "jellyflix-sample-plugin-0.1.0" }
 
 android {
     namespace = "com.jellyflix.sample.trending"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.jellyflix.sample.trending"
         minSdk = 23
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
     }

@@ -12,12 +12,12 @@ base { archivesName = "jellyflix-app-0.1.0" }
 
 android {
     namespace = "com.jellyflix.tv"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.jellyflix.tv"
         minSdk = 23
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
 
