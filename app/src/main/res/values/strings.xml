@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Jellyflix</string>
+
+    <!-- Server connect -->
+    <string name="connect_title">Connect to Jellyfin</string>
+    <string name="connect_subtitle">Enter your server address</string>
+    <string name="connect_hint">http://jellyfin.local:8096</string>
+    <string name="connect_continue">Continue</string>
+    <string name="connect_discovering">Searching your network…</string>
+
+    <!-- Login -->
+    <string name="login_title">Sign in</string>
+    <string name="login_username">Username</string>
+    <string name="login_password">Password</string>
+    <string name="login_submit">Sign in</string>
+    <string name="login_quickconnect">Use Quick Connect</string>
+
+    <!-- Home -->
+    <string name="home_continue">Continue watching</string>
+    <string name="home_next_up">Next up</string>
+    <string name="home_latest">Recently added</string>
+    <string name="home_libraries">Your libraries</string>
+
+    <!-- Player -->
+    <string name="player_skip_intro">Skip intro</string>
+    <string name="player_skip_credits">Skip credits</string>
+    <string name="player_next_episode">Next episode</string>
+
+    <!-- Settings -->
+    <string name="settings_playback">Playback</string>
+    <string name="settings_plugins">Plugins</string>
+    <string name="settings_prefer_direct_play">Prefer direct play</string>
+    <string name="settings_tunneled_playback">Tunneled decoding</string>
+    <string name="settings_passthrough">Audio passthrough (Atmos / DTS)</string>
+    <string name="settings_refresh_rate_match">Match display refresh rate</string>
+</resources>
