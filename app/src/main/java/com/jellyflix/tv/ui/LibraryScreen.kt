@@ -19,6 +19,7 @@ import com.jellyflix.tv.ui.components.MediaCard
 @Composable
 fun LibraryScreen(
     libraryId: String,
+    onOpenDetails: (String) -> Unit,
     onBack: () -> Unit,
     vm: LibraryViewModel = hiltViewModel(),
 ) {
@@ -34,7 +35,7 @@ fun LibraryScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             items(state.items, key = { it.id.toString() }) { item ->
-                MediaCard(item = item, onClick = { /* TODO details */ })
+                MediaCard(item = item, onClick = { onOpenDetails(item.id.toString()) })
             }
         }
     }

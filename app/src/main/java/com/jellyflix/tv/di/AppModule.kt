@@ -4,6 +4,7 @@ import android.content.Context
 import com.jellyflix.tv.data.JellyfinClient
 import com.jellyflix.tv.data.MediaRepository
 import com.jellyflix.tv.data.SessionStore
+import com.jellyflix.tv.data.SettingsStore
 import com.jellyflix.tv.playback.StreamUrlResolver
 import com.jellyflix.tv.plugin.PluginHost
 import com.jellyflix.tv.plugin.PluginManager
@@ -20,6 +21,9 @@ object AppModule {
 
     @Provides @Singleton
     fun provideSessionStore(@ApplicationContext ctx: Context): SessionStore = SessionStore(ctx)
+
+    @Provides @Singleton
+    fun provideSettingsStore(@ApplicationContext ctx: Context): SettingsStore = SettingsStore(ctx)
 
     @Provides @Singleton
     fun provideJellyfinClient(@ApplicationContext ctx: Context, store: SessionStore): JellyfinClient =

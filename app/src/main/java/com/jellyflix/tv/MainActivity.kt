@@ -1,5 +1,6 @@
 package com.jellyflix.tv
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,19 +12,23 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.jellyflix.tv.playback.PlayerActivity
 import com.jellyflix.tv.session.SessionViewModel
+import com.jellyflix.tv.ui.DetailsScreen
 import com.jellyflix.tv.ui.HomeScreen
 import com.jellyflix.tv.ui.LibraryScreen
 import com.jellyflix.tv.ui.LoginScreen
 import com.jellyflix.tv.ui.ServerConnectScreen
+import com.jellyflix.tv.ui.SettingsScreen
 import com.jellyflix.tv.ui.theme.JellyflixTheme
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.UUID
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { JellyflixTheme { App() } }
+        setContent { JellyflixTheme { App(applicationContext) } }
     }
 }
 
@@ -32,11 +37,14 @@ object Routes {
     const val LOGIN = "login"
     const val HOME = "home"
     const val LIBRARY = "library/{id}"
+    const val DETAILS = "details/{id}"
+    const val SETTINGS = "settings"
     fun library(id: String) = "library/$id"
+    fun details(id: String) = "details/$id"
 }
 
 @Composable
-private fun App(sessionVm: SessionViewModel = hiltViewModel()) {
+private fun App(appContext: Context, sessionVm: SessionViewModel = hiltViewModel()) {
     val nav = rememberNavController()
     val state by sessionVm.state.collectAsState()
 
@@ -55,15 +63,32 @@ private fun App(sessionVm: SessionViewModel = hiltViewModel()) {
         }
     }
 
+    val openDetails: (String) -> Unit = { id -> nav.navigate(Routes.details(id)) }
+    val openPlayer: (String, String) -> Unit = { id, title ->
+        appContext.startActivity(
+            PlayerActivity.intent(appContext, UUID.fromString(id), title)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+
     NavHost(navController = nav, startDestination = Routes.CONNECT) {
-        composable(Routes.CONNECT) { ServerConnectScreen(onConnected = { sessionVm.onServerSet(it) }) }
-        composable(Routes.LOGIN) { LoginScreen(onAuthenticated = { sessionVm.refresh() }) }
+        composable(Routes.CONNECT) { ServerConnectScreen(onConnected = sessionVm::onServerSet) }
+        composable(Routes.LOGIN) { LoginScreen(onAuthenticated = sessionVm::refresh) }
         composable(Routes.HOME) {
-            HomeScreen(onOpenLibrary = { id -> nav.navigate(Routes.library(id)) })
+            HomeScreen(
+                onOpenLibrary = { id -> nav.navigate(Routes.library(id)) },
+                onOpenDetails = openDetails,
+                onOpenSettings = { nav.navigate(Routes.SETTINGS) },
+            )
         }
-        composable(Routes.LIBRARY) { backStack ->
-            val id = backStack.arguments?.getString("id").orEmpty()
-            LibraryScreen(libraryId = id, onBack = { nav.popBackStack() })
+        composable(Routes.LIBRARY) { back ->
+            val id = back.arguments?.getString("id").orEmpty()
+            LibraryScreen(libraryId = id, onOpenDetails = openDetails, onBack = { nav.popBackStack() })
         }
+        composable(Routes.DETAILS) { back ->
+            val id = back.arguments?.getString("id").orEmpty()
+            DetailsScreen(itemId = id, onPlay = openPlayer, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.SETTINGS) { SettingsScreen() }
     }
 }
