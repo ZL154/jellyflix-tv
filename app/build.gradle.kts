@@ -7,6 +7,9 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// Rename APK output: jellyflix-app-0.1.0-<buildType>.apk
+base { archivesName = "jellyflix-app-0.1.0" }
+
 android {
     namespace = "com.jellyflix.tv"
     compileSdk = 34
@@ -22,8 +25,6 @@ android {
 
         buildConfigField("String", "CLIENT_NAME", "\"Jellyflix\"")
         buildConfigField("String", "CLIENT_VERSION", "\"0.1.0\"")
-
-        setProperty("archivesBaseName", "jellyflix-app-$versionName")
     }
 
     buildFeatures {

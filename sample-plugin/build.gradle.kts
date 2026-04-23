@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
 }
 
+base { archivesName = "jellyflix-sample-plugin-0.1.0" }
+
 android {
     namespace = "com.jellyflix.sample.trending"
     compileSdk = 34
@@ -13,7 +15,6 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "0.1.0"
-        setProperty("archivesBaseName", "jellyflix-sample-plugin-$versionName")
     }
 
     signingConfigs {
