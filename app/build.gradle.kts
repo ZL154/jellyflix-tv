@@ -22,11 +22,25 @@ android {
 
         buildConfigField("String", "CLIENT_NAME", "\"Jellyflix\"")
         buildConfigField("String", "CLIENT_VERSION", "\"0.1.0\"")
+
+        setProperty("archivesBaseName", "jellyflix-app-$versionName")
     }
 
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystorePath = providers.environmentVariable("JELLYFLIX_KEYSTORE").orNull
+            if (keystorePath != null && file(keystorePath).exists()) {
+                storeFile = file(keystorePath)
+                storePassword = providers.environmentVariable("JELLYFLIX_KEYSTORE_PASSWORD").orNull
+                keyAlias = providers.environmentVariable("JELLYFLIX_KEY_ALIAS").orNull
+                keyPassword = providers.environmentVariable("JELLYFLIX_KEY_PASSWORD").orNull
+            }
+        }
     }
 
     buildTypes {
@@ -42,6 +56,13 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Only attach the release signing config if the keystore env var is actually set.
+            // Otherwise AGP would fail the task on CI without secrets configured.
+            val hasKeystore = providers.environmentVariable("JELLYFLIX_KEYSTORE").orNull
+                ?.let { file(it).exists() } ?: false
+            if (hasKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

@@ -1,5 +1,9 @@
 # Jellyflix
 
+[![Build](https://github.com/ZL154/jellyflix-tv/actions/workflows/build.yml/badge.svg)](https://github.com/ZL154/jellyflix-tv/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/ZL154/jellyflix-tv?include_prereleases&label=release)](https://github.com/ZL154/jellyflix-tv/releases/latest)
+[![License: GPL v2](https://img.shields.io/badge/License-GPLv2-blue.svg)](LICENSE)
+
 A Jellyfin client for **Android TV / Google TV** focused on two things the
 official clients leave on the table:
 
@@ -31,28 +35,37 @@ official clients leave on the table:
 | Images           | Coil                                                     |
 | Min / Target SDK | 23 / 34                                                  |
 
-## Build
-
-```bash
-# One-off: generate the Gradle wrapper jar. (We don't commit the .jar so
-# the repo stays text-only; the wrapper script + properties are in place.)
-gradle wrapper --gradle-version 8.9
-
-./gradlew :app:assembleDebug
-./gradlew :sample-plugin:assembleDebug
-```
-
-Open the repo in **Android Studio Panda 4 (2025.3.4)** or newer. When prompted,
-install the Android TV 14 (API 34) system image if you want to run the emulator.
-
 ## Install on a TV
 
-1. Enable ADB debugging on the TV (Settings → Device Preferences → About →
-   build number ×7, then Developer options → ADB debugging).
-2. Pair: `adb connect <tv-ip>:5555`.
-3. Deploy: `./gradlew :app:installDebug`.
-4. Install the sample plugin the same way: `./gradlew :sample-plugin:installDebug`.
-   It will show up on next app launch.
+### Option A — sideload a prebuilt APK (easiest)
+
+Every push to `main` produces a debug APK in **[GitHub Actions → latest run →
+Artifacts](https://github.com/ZL154/jellyflix-tv/actions/workflows/build.yml)**,
+and every tagged `v*` release publishes APKs to **[Releases](https://github.com/ZL154/jellyflix-tv/releases)**.
+
+1. Enable Developer options → ADB debugging on the TV (Settings → Device
+   Preferences → About → tap Build ×7).
+2. From a laptop on the same network:
+   ```bash
+   adb connect <tv-ip>:5555
+   adb install jellyflix-app-*.apk
+   adb install jellyflix-sample-plugin-*.apk   # optional, reference plugin
+   ```
+3. No ADB? Drop the APK on a USB stick or use an app like *Send files to TV*
+   or *X-plore* on the TV, then open the APK to install.
+
+### Option B — build from source
+
+Open the repo in **Android Studio Panda 4 (2025.3.4)** or newer. When prompted,
+install the Android TV 14 (API 34) system image if you want the emulator.
+
+```bash
+# One-off: generate the Gradle wrapper jar (not committed).
+gradle wrapper --gradle-version 8.9
+
+./gradlew :app:installDebug           # installs over ADB
+./gradlew :sample-plugin:installDebug # optional reference plugin
+```
 
 ## Repository layout
 

@@ -13,10 +13,30 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "0.1.0"
+        setProperty("archivesBaseName", "jellyflix-sample-plugin-$versionName")
+    }
+
+    signingConfigs {
+        create("release") {
+            val keystorePath = providers.environmentVariable("JELLYFLIX_KEYSTORE").orNull
+            if (keystorePath != null && file(keystorePath).exists()) {
+                storeFile = file(keystorePath)
+                storePassword = providers.environmentVariable("JELLYFLIX_KEYSTORE_PASSWORD").orNull
+                keyAlias = providers.environmentVariable("JELLYFLIX_KEY_ALIAS").orNull
+                keyPassword = providers.environmentVariable("JELLYFLIX_KEY_PASSWORD").orNull
+            }
+        }
     }
 
     buildTypes {
-        release { isMinifyEnabled = false }
+        release {
+            isMinifyEnabled = false
+            val hasKeystore = providers.environmentVariable("JELLYFLIX_KEYSTORE").orNull
+                ?.let { file(it).exists() } ?: false
+            if (hasKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
     }
 
     compileOptions {
