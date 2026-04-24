@@ -2,10 +2,12 @@ package com.jellyflix.tv.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jellyflix.tv.data.BrandingRepository
 import com.jellyflix.tv.data.JellyfinClient
 import com.jellyflix.tv.data.SessionStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +21,10 @@ import timber.log.Timber
 class LoginViewModel @Inject constructor(
     private val client: JellyfinClient,
     private val store: SessionStore,
+    brandingRepo: BrandingRepository,
 ) : ViewModel() {
+
+    val branding: Flow<BrandingRepository.Branding> = brandingRepo.state
 
     sealed interface State {
         data object Idle : State

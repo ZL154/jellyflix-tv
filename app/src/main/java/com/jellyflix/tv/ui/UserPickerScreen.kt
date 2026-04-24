@@ -10,15 +10,16 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PersonAdd
@@ -28,10 +29,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +47,9 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 
+private val DefaultAccent = Color(0xFF7E5BEF)
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun UserPickerScreen(
     onPickUser: (username: String, requiresPassword: Boolean) -> Unit,
@@ -54,114 +58,143 @@ fun UserPickerScreen(
     vm: UserPickerViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsState()
-    val firstTileFocus = remember { FocusRequester() }
+    val accent = state.accentColor?.let { Color(it) } ?: DefaultAccent
 
     Surface(Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 72.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                "Who's watching?",
-                style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 56.sp),
-                textAlign = TextAlign.Center,
-            )
-            state.serverName?.takeIf { it.isNotBlank() }?.let {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp),
+        Box(Modifier.fillMaxSize()) {
+            // Backdrop: server splashscreen blurred, or a subtle gradient.
+            if (state.splashscreenUrl != null) {
+                AsyncImage(
+                    model = state.splashscreenUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().blur(42.dp),
+                )
+                Box(
+                    Modifier.fillMaxSize().background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xCC0B0D12), Color(0xE60B0D12), Color(0xFF0B0D12)),
+                        )
+                    )
+                )
+            } else {
+                Box(
+                    Modifier.fillMaxSize().background(
+                        Brush.radialGradient(
+                            colors = listOf(accent.copy(alpha = 0.18f), Color(0xFF0B0D12)),
+                            radius = 1400f,
+                        )
+                    )
                 )
             }
 
-            Spacer(Modifier.height(48.dp))
+            // Content
+            Column(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 56.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(Modifier.weight(0.5f))
 
-            when {
-                state.loading -> Text("Loading users…", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                state.users.isEmpty() && state.error == null -> Text(
-                    "No public users on this server. Tap Add user to sign in manually.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Text(
+                    "Who's watching?",
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 56.sp,
+                    ),
                     textAlign = TextAlign.Center,
                 )
-                else -> LazyRow(
-                    contentPadding = PaddingValues(horizontal = 32.dp),
-                    horizontalArrangement = Arrangement.spacedBy(32.dp),
-                ) {
-                    itemsIndexed(state.users) { index, u ->
-                        UserTile(
-                            user = u,
-                            onClick = { onPickUser(u.name, u.hasPassword) },
-                            modifier = if (index == 0) Modifier.focusRequester(firstTileFocus) else Modifier,
-                        )
-                    }
-                    item {
-                        AddUserTile(onClick = onAddUser)
+                state.serverName?.takeIf { it.isNotBlank() }?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                        color = Color(0xFFA8ADBD),
+                        modifier = Modifier.padding(top = 12.dp),
+                    )
+                }
+
+                Spacer(Modifier.height(56.dp))
+
+                when {
+                    state.loading -> Text(
+                        "Loading users…",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    state.users.isEmpty() && state.error == null -> Text(
+                        "No public users on this server. Tap Add user to sign in manually.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    else -> FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(40.dp, Alignment.CenterHorizontally),
+                        verticalArrangement = Arrangement.spacedBy(32.dp),
+                        maxItemsInEachRow = 6,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        state.users.forEach { u ->
+                            UserTile(user = u, accent = accent, onClick = {
+                                onPickUser(u.name, u.hasPassword)
+                            })
+                        }
+                        AddUserTile(accent = accent, onClick = onAddUser)
                     }
                 }
-            }
 
-            state.error?.let {
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    "Couldn't fetch users: $it",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                )
-            }
+                state.error?.let {
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        "Couldn't fetch users: $it",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                    )
+                }
 
-            Spacer(Modifier.height(48.dp))
+                Spacer(Modifier.weight(1f))
 
-            OutlinedButton(
-                onClick = onChangeServer,
-                modifier = Modifier.width(220.dp).height(52.dp),
-            ) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Change server", style = MaterialTheme.typography.titleLarge)
+                OutlinedButton(
+                    onClick = onChangeServer,
+                    modifier = Modifier.width(220.dp).height(48.dp),
+                ) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Change server", style = MaterialTheme.typography.titleLarge)
+                    }
                 }
             }
         }
     }
 }
 
-// Small local helper since LazyListScope doesn't have an `itemsIndexed` import conflict here.
-private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexed(
-    items: List<UserPickerViewModel.PublicUser>,
-    itemContent: @androidx.compose.runtime.Composable (index: Int, item: UserPickerViewModel.PublicUser) -> Unit,
-) {
-    items(items.size, key = { items[it].id.toString() }) { i -> itemContent(i, items[i]) }
-}
-
 @Composable
 private fun UserTile(
     user: UserPickerViewModel.PublicUser,
+    accent: Color,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (focused) 1.12f else 1f,
+        targetValue = if (focused) 1.08f else 1f,
         animationSpec = tween(durationMillis = 140),
         label = "user-scale",
     )
+    val ringWidth by animateFloatAsState(
+        targetValue = if (focused) 4f else 0f,
+        animationSpec = tween(durationMillis = 140),
+        label = "user-ring",
+    )
 
     Column(
-        modifier = modifier.width(180.dp).scale(scale),
+        modifier = Modifier.width(180.dp).scale(scale),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
                 .size(160.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .border(
-                    width = if (focused) 4.dp else 0.dp,
-                    color = if (focused) Color(0xFF7E5BEF) else Color.Transparent,
-                    shape = CircleShape,
-                )
+                .background(Color(0xFF1C2130))
+                .border(width = ringWidth.dp, color = accent, shape = CircleShape)
                 .clickable(interactionSource = interaction, indication = null, onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
@@ -176,6 +209,7 @@ private fun UserTile(
                 Text(
                     user.name.take(1).uppercase(),
                     style = MaterialTheme.typography.displayLarge.copy(fontSize = 72.sp),
+                    color = Color(0xFFECEEF5),
                 )
             }
         }
@@ -183,7 +217,7 @@ private fun UserTile(
         Text(
             user.name,
             style = MaterialTheme.typography.titleLarge,
-            color = if (focused) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (focused) Color.White else Color(0xFFA8ADBD),
             maxLines = 1,
             textAlign = TextAlign.Center,
         )
@@ -191,11 +225,11 @@ private fun UserTile(
 }
 
 @Composable
-private fun AddUserTile(onClick: () -> Unit) {
+private fun AddUserTile(accent: Color, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (focused) 1.12f else 1f,
+        targetValue = if (focused) 1.08f else 1f,
         animationSpec = tween(durationMillis = 140),
         label = "add-scale",
     )
@@ -208,10 +242,10 @@ private fun AddUserTile(onClick: () -> Unit) {
             modifier = Modifier
                 .size(160.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface)
+                .background(Color(0x221C2130))
                 .border(
                     width = if (focused) 4.dp else 2.dp,
-                    color = if (focused) Color(0xFF7E5BEF) else Color(0xFF6C7389),
+                    color = if (focused) accent else Color(0xFF6C7389),
                     shape = CircleShape,
                 )
                 .clickable(interactionSource = interaction, indication = null, onClick = onClick),
@@ -220,6 +254,7 @@ private fun AddUserTile(onClick: () -> Unit) {
             Icon(
                 Icons.Filled.PersonAdd,
                 contentDescription = "Add user",
+                tint = if (focused) accent else Color(0xFFA8ADBD),
                 modifier = Modifier.size(48.dp),
             )
         }
@@ -227,7 +262,7 @@ private fun AddUserTile(onClick: () -> Unit) {
         Text(
             "Add user",
             style = MaterialTheme.typography.titleLarge,
-            color = if (focused) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (focused) Color.White else Color(0xFFA8ADBD),
             textAlign = TextAlign.Center,
         )
     }

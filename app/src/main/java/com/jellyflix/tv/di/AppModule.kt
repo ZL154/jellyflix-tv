@@ -1,8 +1,10 @@
 package com.jellyflix.tv.di
 
 import android.content.Context
+import com.jellyflix.tv.data.BrandingRepository
 import com.jellyflix.tv.data.JellyfinClient
 import com.jellyflix.tv.data.MediaRepository
+import com.jellyflix.tv.data.ServerInfoRepository
 import com.jellyflix.tv.data.SessionStore
 import com.jellyflix.tv.data.SettingsStore
 import com.jellyflix.tv.playback.StreamUrlResolver
@@ -39,6 +41,13 @@ object AppModule {
     @Provides @Singleton
     fun providePluginHost(@ApplicationContext ctx: Context, mgr: PluginManager): PluginHost =
         PluginHost(ctx, mgr)
+
+    @Provides @Singleton
+    fun provideServerInfoRepo(client: JellyfinClient): ServerInfoRepository = ServerInfoRepository(client)
+
+    @Provides @Singleton
+    fun provideBrandingRepo(client: JellyfinClient, store: SessionStore): BrandingRepository =
+        BrandingRepository(client, store)
 
     @Provides @Singleton
     fun provideStreamResolver(

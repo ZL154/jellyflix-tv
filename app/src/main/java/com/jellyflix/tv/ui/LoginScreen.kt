@@ -31,6 +31,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import com.jellyflix.tv.data.BrandingRepository
 import com.jellyflix.tv.session.SessionViewModel
 import com.jellyflix.tv.ui.components.JellyflixPasswordField
 import com.jellyflix.tv.ui.components.JellyflixTextField
@@ -46,6 +47,7 @@ fun LoginScreen(
     var username by remember { mutableStateOf(initialUsername) }
     var password by remember { mutableStateOf("") }
     val state by vm.state.collectAsState()
+    val branding by vm.branding.collectAsState(initial = BrandingRepository.Branding())
     val firstFocus = remember { FocusRequester() }
 
     LaunchedEffect(Unit) { firstFocus.requestFocus() }
@@ -127,6 +129,16 @@ fun LoginScreen(
                     (state as LoginViewModel.State.Error).message,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
+                )
+            }
+
+            branding.loginDisclaimer?.let {
+                Spacer(Modifier.height(32.dp))
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.width(480.dp),
                 )
             }
         }

@@ -2,6 +2,7 @@ package com.jellyflix.tv.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jellyflix.tv.data.BrandingRepository
 import com.jellyflix.tv.data.JellyfinClient
 import com.jellyflix.tv.data.SessionStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,6 +20,7 @@ import org.jellyfin.sdk.api.client.extensions.userApi
 class UserPickerViewModel @Inject constructor(
     private val client: JellyfinClient,
     private val store: SessionStore,
+    private val branding: BrandingRepository,
 ) : ViewModel() {
 
     data class PublicUser(
@@ -30,6 +32,8 @@ class UserPickerViewModel @Inject constructor(
 
     data class State(
         val serverName: String? = null,
+        val splashscreenUrl: String? = null,
+        val accentColor: Long? = null,
         val users: List<PublicUser> = emptyList(),
         val loading: Boolean = true,
         val error: String? = null,
@@ -38,7 +42,19 @@ class UserPickerViewModel @Inject constructor(
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state.asStateFlow()
 
-    init { load() }
+    init {
+        load()
+        viewModelScope.launch {
+            branding.refresh()
+            branding.state.collect { b ->
+                _state.value = _state.value.copy(
+                    serverName = b.serverName ?: _state.value.serverName,
+                    splashscreenUrl = b.splashscreenUrl,
+                    accentColor = b.accentColor,
+                )
+            }
+        }
+    }
 
     fun load() = viewModelScope.launch {
         _state.value = _state.value.copy(loading = true, error = null)
@@ -47,6 +63,8 @@ class UserPickerViewModel @Inject constructor(
         try {
             val api = client.unauthenticated(baseUrl)
             val info = runCatching { api.systemApi.getPublicSystemInfo().content }.getOrNull()
+            info?.serverName?.let(branding::setServerName)
+
             val users = runCatching { api.userApi.getPublicUsers().content }
                 .getOrDefault(emptyList())
                 .map { u ->
@@ -59,7 +77,7 @@ class UserPickerViewModel @Inject constructor(
                         hasPassword = u.hasPassword == true,
                     )
                 }
-            _state.value = State(
+            _state.value = _state.value.copy(
                 serverName = info?.serverName,
                 users = users,
                 loading = false,
