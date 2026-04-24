@@ -38,16 +38,20 @@ import com.jellyflix.tv.ui.components.JellyflixTextField
 @Composable
 fun LoginScreen(
     onAuthenticated: () -> Unit,
+    onBack: () -> Unit = {},
+    initialUsername: String = "",
     vm: LoginViewModel = hiltViewModel(),
     sessionVm: SessionViewModel = hiltViewModel(),
 ) {
-    var username by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf(initialUsername) }
     var password by remember { mutableStateOf("") }
     val state by vm.state.collectAsState()
-    val userFocus = remember { FocusRequester() }
+    val firstFocus = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) { userFocus.requestFocus() }
+    LaunchedEffect(Unit) { firstFocus.requestFocus() }
     if (state is LoginViewModel.State.Success) onAuthenticated()
+
+    val submit: () -> Unit = { vm.signIn(username, password) }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -55,6 +59,14 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center,
         ) {
             Text("Sign in", style = MaterialTheme.typography.displayMedium)
+            if (initialUsername.isNotBlank()) {
+                Text(
+                    "as $initialUsername",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
             Spacer(Modifier.height(24.dp))
 
             JellyflixTextField(
@@ -65,7 +77,9 @@ fun LoginScreen(
                     keyboardType = KeyboardType.Text,
                     imeAction = ImeAction.Next,
                 ),
-                modifier = Modifier.width(480.dp).focusRequester(userFocus),
+                modifier = Modifier
+                    .width(480.dp)
+                    .then(if (initialUsername.isBlank()) Modifier.focusRequester(firstFocus) else Modifier),
             )
 
             Spacer(Modifier.height(16.dp))
@@ -78,15 +92,17 @@ fun LoginScreen(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Go,
                 ),
-                keyboardActions = KeyboardActions(onGo = { vm.signIn(username, password) }),
-                modifier = Modifier.width(480.dp),
+                keyboardActions = KeyboardActions(onGo = { submit() }),
+                modifier = Modifier
+                    .width(480.dp)
+                    .then(if (initialUsername.isNotBlank()) Modifier.focusRequester(firstFocus) else Modifier),
             )
 
             Spacer(Modifier.height(24.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(
-                    onClick = { vm.signIn(username, password) },
+                    onClick = submit,
                     enabled = state !is LoginViewModel.State.Submitting,
                     modifier = Modifier.width(220.dp).height(56.dp),
                 ) {
@@ -96,11 +112,11 @@ fun LoginScreen(
                 }
 
                 OutlinedButton(
-                    onClick = { sessionVm.clearServer() },
-                    modifier = Modifier.width(220.dp).height(56.dp),
+                    onClick = onBack,
+                    modifier = Modifier.width(180.dp).height(56.dp),
                 ) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Change server", style = MaterialTheme.typography.titleLarge)
+                        Text("Back", style = MaterialTheme.typography.titleLarge)
                     }
                 }
             }
