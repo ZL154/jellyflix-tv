@@ -4,16 +4,15 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,6 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +54,7 @@ fun UserPickerScreen(
     vm: UserPickerViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsState()
+    val firstTileFocus = remember { FocusRequester() }
 
     Surface(Modifier.fillMaxSize()) {
         Column(
@@ -65,12 +67,14 @@ fun UserPickerScreen(
                 style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 56.sp),
                 textAlign = TextAlign.Center,
             )
-            Text(
-                state.serverName ?: "",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp),
-            )
+            state.serverName?.takeIf { it.isNotBlank() }?.let {
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
 
             Spacer(Modifier.height(48.dp))
 
@@ -85,10 +89,12 @@ fun UserPickerScreen(
                     contentPadding = PaddingValues(horizontal = 32.dp),
                     horizontalArrangement = Arrangement.spacedBy(32.dp),
                 ) {
-                    items(state.users, key = { it.id }) { u ->
-                        UserTile(user = u, onClick = {
-                            onPickUser(u.name, u.hasPassword)
-                        })
+                    itemsIndexed(state.users) { index, u ->
+                        UserTile(
+                            user = u,
+                            onClick = { onPickUser(u.name, u.hasPassword) },
+                            modifier = if (index == 0) Modifier.focusRequester(firstTileFocus) else Modifier,
+                        )
                     }
                     item {
                         AddUserTile(onClick = onAddUser)
@@ -120,8 +126,20 @@ fun UserPickerScreen(
     }
 }
 
+// Small local helper since LazyListScope doesn't have an `itemsIndexed` import conflict here.
+private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexed(
+    items: List<UserPickerViewModel.PublicUser>,
+    itemContent: @androidx.compose.runtime.Composable (index: Int, item: UserPickerViewModel.PublicUser) -> Unit,
+) {
+    items(items.size, key = { items[it].id.toString() }) { i -> itemContent(i, items[i]) }
+}
+
 @Composable
-private fun UserTile(user: UserPickerViewModel.PublicUser, onClick: () -> Unit) {
+private fun UserTile(
+    user: UserPickerViewModel.PublicUser,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val scale by animateFloatAsState(
@@ -131,39 +149,34 @@ private fun UserTile(user: UserPickerViewModel.PublicUser, onClick: () -> Unit) 
     )
 
     Column(
-        modifier = Modifier.width(180.dp).scale(scale),
+        modifier = modifier.width(180.dp).scale(scale),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Surface(
-            onClick = onClick,
-            interactionSource = interaction,
-            shape = CircleShape,
+        Box(
             modifier = Modifier
                 .size(160.dp)
                 .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
                 .border(
                     width = if (focused) 4.dp else 0.dp,
                     color = if (focused) Color(0xFF7E5BEF) else Color.Transparent,
                     shape = CircleShape,
-                ),
+                )
+                .clickable(interactionSource = interaction, indication = null, onClick = onClick),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (user.avatarUrl != null) {
-                    AsyncImage(
-                        model = user.avatarUrl,
-                        contentDescription = user.name,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
-                    Text(
-                        user.name.take(1).uppercase(),
-                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 72.sp),
-                    )
-                }
+            if (user.avatarUrl != null) {
+                AsyncImage(
+                    model = user.avatarUrl,
+                    contentDescription = user.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                Text(
+                    user.name.take(1).uppercase(),
+                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 72.sp),
+                )
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -191,29 +204,24 @@ private fun AddUserTile(onClick: () -> Unit) {
         modifier = Modifier.width(180.dp).scale(scale),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Surface(
-            onClick = onClick,
-            interactionSource = interaction,
-            shape = CircleShape,
+        Box(
             modifier = Modifier
                 .size(160.dp)
                 .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface)
                 .border(
                     width = if (focused) 4.dp else 2.dp,
                     color = if (focused) Color(0xFF7E5BEF) else Color(0xFF6C7389),
                     shape = CircleShape,
-                ),
-        ) {
-            Box(
-                Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.Filled.PersonAdd,
-                    contentDescription = "Add user",
-                    modifier = Modifier.size(48.dp),
                 )
-            }
+                .clickable(interactionSource = interaction, indication = null, onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.Filled.PersonAdd,
+                contentDescription = "Add user",
+                modifier = Modifier.size(48.dp),
+            )
         }
         Spacer(Modifier.height(16.dp))
         Text(
