@@ -8,6 +8,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.first
 import org.jellyfin.sdk.Jellyfin
+import org.jellyfin.sdk.android.android
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.createJellyfin
 import org.jellyfin.sdk.model.ClientInfo
@@ -24,6 +25,7 @@ class JellyfinClient @Inject constructor(
 ) {
     private val jellyfin: Jellyfin = createJellyfin {
         clientInfo = ClientInfo(name = BuildConfig.CLIENT_NAME, version = BuildConfig.CLIENT_VERSION)
+        android(context)
     }
 
     @Volatile private var cached: ApiClient? = null
