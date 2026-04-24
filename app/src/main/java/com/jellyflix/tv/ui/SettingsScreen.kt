@@ -23,7 +23,10 @@ import androidx.tv.material3.Text
 import com.jellyflix.tv.data.SettingsStore
 
 @Composable
-fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(
+    onOpenServerPlugins: () -> Unit = {},
+    vm: SettingsViewModel = hiltViewModel(),
+) {
     val prefs by vm.prefs.collectAsState(initial = SettingsStore.Prefs())
     val plugins by vm.plugins.collectAsState()
 
@@ -70,11 +73,27 @@ fun SettingsScreen(vm: SettingsViewModel = hiltViewModel()) {
                 )
             }
 
-            item { SectionHeader("Plugins") }
+            item { SectionHeader("Jellyfin server") }
+            item {
+                androidx.tv.material3.Button(
+                    onClick = onOpenServerPlugins,
+                    modifier = Modifier.padding(vertical = 4.dp),
+                ) {
+                    Text("View installed server plugins", style = MaterialTheme.typography.titleLarge)
+                }
+                Text(
+                    "Shown for reference only. Server plugins run on your Jellyfin server and are managed from its web dashboard.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
+                )
+            }
+
+            item { SectionHeader("Jellyflix plugins") }
             item {
                 ToggleRow(
-                    label = "Enable plugins",
-                    subtitle = "Load installed Jellyflix plugin APKs.",
+                    label = "Enable Jellyflix plugins",
+                    subtitle = "Load installed Jellyflix plugin APKs (separate from server plugins).",
                     checked = prefs.pluginsEnabled,
                     onCheckedChange = vm::setPluginsEnabled,
                 )

@@ -19,6 +19,7 @@ import com.jellyflix.tv.ui.HomeScreen
 import com.jellyflix.tv.ui.LibraryScreen
 import com.jellyflix.tv.ui.LoginScreen
 import com.jellyflix.tv.ui.ServerConnectScreen
+import com.jellyflix.tv.ui.ServerPluginsScreen
 import com.jellyflix.tv.ui.SettingsScreen
 import com.jellyflix.tv.ui.theme.JellyflixTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -39,6 +40,7 @@ object Routes {
     const val LIBRARY = "library/{id}"
     const val DETAILS = "details/{id}"
     const val SETTINGS = "settings"
+    const val SERVER_PLUGINS = "server_plugins"
     fun library(id: String) = "library/$id"
     fun details(id: String) = "details/$id"
 }
@@ -89,6 +91,9 @@ private fun App(appContext: Context, sessionVm: SessionViewModel = hiltViewModel
             val id = back.arguments?.getString("id").orEmpty()
             DetailsScreen(itemId = id, onPlay = openPlayer, onBack = { nav.popBackStack() })
         }
-        composable(Routes.SETTINGS) { SettingsScreen() }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(onOpenServerPlugins = { nav.navigate(Routes.SERVER_PLUGINS) })
+        }
+        composable(Routes.SERVER_PLUGINS) { ServerPluginsScreen() }
     }
 }
