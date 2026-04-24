@@ -8,7 +8,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.first
 import org.jellyfin.sdk.Jellyfin
-import org.jellyfin.sdk.android
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.createJellyfin
 import org.jellyfin.sdk.model.ClientInfo
@@ -23,12 +22,11 @@ class JellyfinClient @Inject constructor(
     @ApplicationContext private val context: Context,
     private val session: SessionStore,
 ) {
-    private val jellyfin: Jellyfin = run {
-        val appCtx = context
-        createJellyfin {
-            clientInfo = ClientInfo(name = BuildConfig.CLIENT_NAME, version = BuildConfig.CLIENT_VERSION)
-            android(appCtx)
-        }
+    private val jellyfin: Jellyfin = createJellyfin {
+        clientInfo = ClientInfo(name = BuildConfig.CLIENT_NAME, version = BuildConfig.CLIENT_VERSION)
+        // Deliberately not calling android(context) — the jellyfin-platform-android
+        // artifact's versions diverged from jellyfin-core (1.0.3 vs 1.6.x). We build
+        // DeviceInfo ourselves below, which is all android() actually configured for us.
     }
 
     @Volatile private var cached: ApiClient? = null

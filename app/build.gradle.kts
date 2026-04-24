@@ -126,7 +126,6 @@ dependencies {
     implementation(libs.coil.compose)
 
     implementation(libs.jellyfin.core)
-    implementation(libs.jellyfin.android)
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
