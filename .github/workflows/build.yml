@@ -13,9 +13,9 @@ concurrency:
 
 jobs:
   build:
-    name: Assemble debug APKs
+    name: Assemble APKs
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
 
@@ -36,13 +36,24 @@ jobs:
             gradle wrapper --gradle-version 8.12 --distribution-type bin
           fi
 
+      - name: Assemble app release (minified, dev-keystore-signed)
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+
       - name: Assemble app debug APK
         run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
 
-      - name: Assemble sample-plugin debug APK
+      - name: Assemble sample-plugin
         run: ./gradlew :sample-plugin:assembleDebug --no-daemon --stacktrace
 
-      - name: Upload app APK
+      - name: Upload release APK (faster, minified)
+        uses: actions/upload-artifact@v4
+        with:
+          name: jellyflix-app-release
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: jellyflix-app-debug

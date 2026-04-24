@@ -33,6 +33,15 @@ android {
     }
 
     signingConfigs {
+        // Committed dev keystore — not a production identity, but lets CI
+        // produce release-type APKs with consistent signatures between runs
+        // so updates install in-place without an uninstall step.
+        create("dev") {
+            storeFile = rootProject.file("jellyflix-dev.keystore")
+            storePassword = "jellyflix"
+            keyAlias = "jellyflix"
+            keyPassword = "jellyflix"
+        }
         create("release") {
             val keystorePath = providers.environmentVariable("JELLYFLIX_KEYSTORE").orNull
             if (keystorePath != null && file(keystorePath).exists()) {
@@ -57,13 +66,13 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Only attach the release signing config if the keystore env var is actually set.
-            // Otherwise AGP would fail the task on CI without secrets configured.
+            // Prefer the user-configured release signing config when the
+            // keystore env vars are set; otherwise fall back to the committed
+            // dev keystore so every CI release APK is installable.
             val hasKeystore = providers.environmentVariable("JELLYFLIX_KEYSTORE").orNull
                 ?.let { file(it).exists() } ?: false
-            if (hasKeystore) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            signingConfig = if (hasKeystore) signingConfigs.getByName("release")
+                            else signingConfigs.getByName("dev")
         }
     }
 
