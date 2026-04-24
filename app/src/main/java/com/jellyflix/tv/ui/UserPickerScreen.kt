@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
@@ -62,35 +60,30 @@ fun UserPickerScreen(
 
     Surface(Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxSize()) {
-            // Backdrop: server splashscreen blurred, or a subtle gradient.
+            // Ambient backdrop. No blur modifier — it kills the GPU on low-end
+            // TV boxes. We lean on a dark scrim + low opacity instead.
             if (state.splashscreenUrl != null) {
                 AsyncImage(
                     model = state.splashscreenUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().blur(42.dp),
-                )
-                Box(
-                    Modifier.fillMaxSize().background(
-                        Brush.verticalGradient(
-                            listOf(Color(0xCC0B0D12), Color(0xE60B0D12), Color(0xFF0B0D12)),
-                        )
-                    )
-                )
-            } else {
-                Box(
-                    Modifier.fillMaxSize().background(
-                        Brush.radialGradient(
-                            colors = listOf(accent.copy(alpha = 0.18f), Color(0xFF0B0D12)),
-                            radius = 1400f,
-                        )
-                    )
+                    alpha = 0.18f,
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
+            Box(
+                Modifier.fillMaxSize().background(
+                    Brush.radialGradient(
+                        colors = listOf(accent.copy(alpha = 0.14f), Color(0xFF0B0D12)),
+                        radius = 1400f,
+                    )
+                )
+            )
 
-            // Content
             Column(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 56.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 72.dp, vertical = 56.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(Modifier.weight(0.5f))
@@ -102,6 +95,7 @@ fun UserPickerScreen(
                         fontSize = 56.sp,
                     ),
                     textAlign = TextAlign.Center,
+                    color = Color.White,
                 )
                 state.serverName?.takeIf { it.isNotBlank() }?.let {
                     Text(
@@ -115,17 +109,12 @@ fun UserPickerScreen(
                 Spacer(Modifier.height(56.dp))
 
                 when {
-                    state.loading -> Text(
-                        "Loading users…",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-
+                    state.loading -> Text("Loading users…", color = Color(0xFFA8ADBD))
                     state.users.isEmpty() && state.error == null -> Text(
                         "No public users on this server. Tap Add user to sign in manually.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color(0xFFA8ADBD),
                         textAlign = TextAlign.Center,
                     )
-
                     else -> FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(40.dp, Alignment.CenterHorizontally),
                         verticalArrangement = Arrangement.spacedBy(32.dp),
@@ -176,13 +165,8 @@ private fun UserTile(
     val focused by interaction.collectIsFocusedAsState()
     val scale by animateFloatAsState(
         targetValue = if (focused) 1.08f else 1f,
-        animationSpec = tween(durationMillis = 140),
+        animationSpec = tween(durationMillis = 120),
         label = "user-scale",
-    )
-    val ringWidth by animateFloatAsState(
-        targetValue = if (focused) 4f else 0f,
-        animationSpec = tween(durationMillis = 140),
-        label = "user-ring",
     )
 
     Column(
@@ -194,7 +178,11 @@ private fun UserTile(
                 .size(160.dp)
                 .clip(CircleShape)
                 .background(Color(0xFF1C2130))
-                .border(width = ringWidth.dp, color = accent, shape = CircleShape)
+                .border(
+                    width = if (focused) 4.dp else 0.dp,
+                    color = if (focused) accent else Color.Transparent,
+                    shape = CircleShape,
+                )
                 .clickable(interactionSource = interaction, indication = null, onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
@@ -230,7 +218,7 @@ private fun AddUserTile(accent: Color, onClick: () -> Unit) {
     val focused by interaction.collectIsFocusedAsState()
     val scale by animateFloatAsState(
         targetValue = if (focused) 1.08f else 1f,
-        animationSpec = tween(durationMillis = 140),
+        animationSpec = tween(durationMillis = 120),
         label = "add-scale",
     )
 

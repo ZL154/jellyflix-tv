@@ -46,6 +46,7 @@ class JellyfinClient @Inject constructor(
         )
         cached = client
         ImageUrls.baseUrl = s.serverUrl
+        ImageUrls.accessToken = s.accessToken
         return client
     }
 
