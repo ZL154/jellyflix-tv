@@ -22,11 +22,16 @@ class JellyfinClient @Inject constructor(
     @ApplicationContext private val context: Context,
     private val session: SessionStore,
 ) {
-    private val jellyfin: Jellyfin = createJellyfin {
-        clientInfo = ClientInfo(name = BuildConfig.CLIENT_NAME, version = BuildConfig.CLIENT_VERSION)
-        // Deliberately not calling android(context) — the jellyfin-platform-android
-        // artifact's versions diverged from jellyfin-core (1.0.3 vs 1.6.x). We build
-        // DeviceInfo ourselves below, which is all android() actually configured for us.
+    private val jellyfin: Jellyfin = run {
+        val appCtx = context
+        createJellyfin {
+            clientInfo = ClientInfo(name = BuildConfig.CLIENT_NAME, version = BuildConfig.CLIENT_VERSION)
+            // jellyfin-core's Android target demands a Context at init time. We set it
+            // directly rather than via jellyfin-platform-android, whose 1.0.3 version
+            // is incompatible with core 1.6.x (stale DiscoveryBroadcastAddressesProvider
+            // reference).
+            this.context = appCtx
+        }
     }
 
     @Volatile private var cached: ApiClient? = null
