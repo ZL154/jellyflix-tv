@@ -23,9 +23,12 @@ class JellyfinClient @Inject constructor(
     @ApplicationContext private val context: Context,
     private val session: SessionStore,
 ) {
-    private val jellyfin: Jellyfin = createJellyfin {
-        clientInfo = ClientInfo(name = BuildConfig.CLIENT_NAME, version = BuildConfig.CLIENT_VERSION)
-        android(context)
+    private val jellyfin: Jellyfin = run {
+        val appCtx = context
+        createJellyfin {
+            clientInfo = ClientInfo(name = BuildConfig.CLIENT_NAME, version = BuildConfig.CLIENT_VERSION)
+            android(appCtx)
+        }
     }
 
     @Volatile private var cached: ApiClient? = null
