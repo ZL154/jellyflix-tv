@@ -49,4 +49,11 @@ class SessionViewModel @Inject constructor(
         client.invalidate()
         refresh()
     }
+
+    /** Clear only the server URL so the user can re-enter a different one without nuking everything else. */
+    fun clearServer() = viewModelScope.launch {
+        store.setServer("")
+        client.invalidate()
+        refresh()
+    }
 }

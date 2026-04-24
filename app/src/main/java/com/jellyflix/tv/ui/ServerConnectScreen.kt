@@ -1,6 +1,7 @@
 package com.jellyflix.tv.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +12,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dns
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,31 +30,27 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import com.jellyflix.tv.ui.components.JellyflixTextField
 
 @Composable
 fun ServerConnectScreen(onConnected: (String) -> Unit) {
     var url by remember { mutableStateOf("http://") }
     val fieldFocus = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) {
-        // Open the system IME as soon as the screen appears — on Android TV the
-        // Leanback keyboard overlays the bottom of the screen.
-        fieldFocus.requestFocus()
+    LaunchedEffect(Unit) { fieldFocus.requestFocus() }
+
+    val submit: () -> Unit = {
+        val trimmed = url.trim()
+        if (trimmed.isNotEmpty() && trimmed != "http://") onConnected(trimmed)
     }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 96.dp, vertical = 64.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 96.dp, vertical = 64.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start,
         ) {
-            Icon(
-                Icons.Filled.Dns,
-                contentDescription = null,
-                modifier = Modifier.padding(bottom = 16.dp),
-            )
+            Icon(Icons.Filled.Dns, contentDescription = null, modifier = Modifier.padding(bottom = 16.dp))
             Text("Connect to Jellyfin", style = MaterialTheme.typography.displayMedium)
             Text(
                 "Enter your server address",
@@ -62,35 +58,25 @@ fun ServerConnectScreen(onConnected: (String) -> Unit) {
                 modifier = Modifier.padding(top = 8.dp, bottom = 32.dp),
             )
 
-            OutlinedTextField(
+            JellyflixTextField(
                 value = url,
                 onValueChange = { url = it },
-                singleLine = true,
-                label = { androidx.compose.material3.Text("Server URL") },
-                placeholder = { androidx.compose.material3.Text("http://192.168.1.2:8096") },
+                label = "Server URL",
+                placeholder = "http://192.168.1.2:8096",
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Uri,
                     imeAction = ImeAction.Go,
                 ),
-                keyboardActions = KeyboardActions(onGo = {
-                    val trimmed = url.trim()
-                    if (trimmed.isNotEmpty() && trimmed != "http://") onConnected(trimmed)
-                }),
-                modifier = Modifier
-                    .width(640.dp)
-                    .focusRequester(fieldFocus),
+                keyboardActions = KeyboardActions(onGo = { submit() }),
+                modifier = Modifier.width(640.dp).focusRequester(fieldFocus),
             )
 
             Spacer(Modifier.height(24.dp))
 
-            Button(
-                onClick = {
-                    val trimmed = url.trim()
-                    if (trimmed.isNotEmpty() && trimmed != "http://") onConnected(trimmed)
-                },
-                modifier = Modifier.width(220.dp).height(56.dp),
-            ) {
-                Text("Continue", style = MaterialTheme.typography.titleLarge)
+            Button(onClick = submit, modifier = Modifier.width(220.dp).height(56.dp)) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Continue", style = MaterialTheme.typography.titleLarge)
+                }
             }
         }
     }
