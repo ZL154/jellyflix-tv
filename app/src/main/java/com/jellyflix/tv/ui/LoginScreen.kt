@@ -7,17 +7,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.tv.material3.Button
@@ -30,10 +35,12 @@ fun LoginScreen(
     onAuthenticated: () -> Unit,
     vm: LoginViewModel = hiltViewModel(),
 ) {
-    var username by remember { mutableStateOf(TextFieldValue("")) }
-    var password by remember { mutableStateOf(TextFieldValue("")) }
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     val state by vm.state.collectAsState()
+    val userFocus = remember { FocusRequester() }
 
+    LaunchedEffect(Unit) { userFocus.requestFocus() }
     if (state is LoginViewModel.State.Success) onAuthenticated()
 
     Surface(modifier = Modifier.fillMaxSize()) {
@@ -44,31 +51,40 @@ fun LoginScreen(
             Text("Sign in", style = MaterialTheme.typography.displayMedium)
             Spacer(Modifier.height(24.dp))
 
-            Text("Username", style = MaterialTheme.typography.labelLarge)
-            BasicTextField(
+            OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
                 singleLine = true,
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                modifier = Modifier.width(480.dp).padding(vertical = 8.dp),
+                label = { androidx.compose.material3.Text("Username") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next,
+                ),
+                modifier = Modifier.width(480.dp).focusRequester(userFocus),
             )
 
             Spacer(Modifier.height(16.dp))
-            Text("Password", style = MaterialTheme.typography.labelLarge)
-            BasicTextField(
+
+            OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
                 singleLine = true,
+                label = { androidx.compose.material3.Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                modifier = Modifier.width(480.dp).padding(vertical = 8.dp),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Go,
+                ),
+                keyboardActions = KeyboardActions(onGo = { vm.signIn(username, password) }),
+                modifier = Modifier.width(480.dp),
             )
 
             Spacer(Modifier.height(24.dp))
             Button(
-                onClick = { vm.signIn(username.text, password.text) },
+                onClick = { vm.signIn(username, password) },
                 enabled = state !is LoginViewModel.State.Submitting,
-            ) { Text("Sign in") }
+                modifier = Modifier.width(220.dp).height(56.dp),
+            ) { Text("Sign in", style = MaterialTheme.typography.titleLarge) }
 
             if (state is LoginViewModel.State.Error) {
                 Spacer(Modifier.height(16.dp))
