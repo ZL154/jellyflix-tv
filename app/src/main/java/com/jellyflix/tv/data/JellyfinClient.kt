@@ -8,7 +8,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.first
 import org.jellyfin.sdk.Jellyfin
-import org.jellyfin.sdk.android.android
+import org.jellyfin.sdk.android
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.createJellyfin
 import org.jellyfin.sdk.model.ClientInfo
