@@ -4,7 +4,7 @@
 [![Release](https://img.shields.io/github/v/release/ZL154/jellyflix-tv?include_prereleases&label=release)](https://github.com/ZL154/jellyflix-tv/releases/latest)
 [![License: GPL v2](https://img.shields.io/badge/License-GPLv2-blue.svg)](LICENSE)
 
-THIS IS NOT COMPLETE AND IS A WORK IN PROGRESS
+**THIS IS NOT COMPLETE AND IS A WORK IN PROGRESS**
 
 A Jellyfin client for **Android TV / Google TV** focused on two things the
 official clients leave on the table:
